@@ -1,0 +1,42 @@
+[project]
+name = "receipt-bot"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp==3.14.5",
+    "openai==3.37.0",
+    "openpyxl==3.1.5",
+    "psycopg[binary]==3.3.6",
+    "pymupdf==1.26.7",
+    "pytelegrambotapi==4.37.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.17.2"]
+ocr = [
+    "paddleocr==3.3.2 ; sys_platform == 'linux'",
+    "paddlepaddle==3.2.2 ; sys_platform == 'linux'",
+    "paddlex==3.3.10 ; sys_platform == 'linux'",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["E501"]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/receipt_bot"]
+
+[project.scripts]
+receipt-bot = "receipt_bot.bootstrap.main:main"
+receipt-bot-models = "receipt_bot.bootstrap.prepare_models:main"

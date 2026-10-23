@@ -1,0 +1,115 @@
+x-application: &application
+  image: receipt-bot:local
+  build: .
+  volumes:
+    - models:/models
+
+x-runtime-environment: &runtime-environment
+  POSTGRES_DSN: postgresql://receipt:receipt@postgres:5432/receipt
+  QWEN_URL: http://llm:8080/v1
+  MODEL_DIR: /models
+
+services:
+  models:
+    <<: *application
+    profiles: ["local"]
+    command: ["python", "-m", "receipt_bot.bootstrap.prepare_models"]
+    environment:
+      MODEL_DIR: /models
+    restart: "no"
+
+  postgres:
+    image: postgres:17-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb
+    environment:
+      POSTGRES_USER: receipt
+      POSTGRES_PASSWORD: receipt
+      POSTGRES_DB: receipt
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U receipt -d receipt"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+  llm:
+    profiles: ["local"]
+    image: ghcr.io/ggml-org/llama.cpp:server-b11669@sha256:8ffe0d28ff5261cc2f78ca1f67db1515bc2529b904a3c25f5b24f4cedfc3411d
+    command:
+      - --model
+      - /models/Qwen3-1.7B-Q4_K_M.gguf
+      - --alias
+      - qwen3-1.7b
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --jinja
+      - --reasoning
+      - "off"
+      - --chat-template-kwargs
+      - '{"enable_thinking":false}'
+      - --n-gpu-layers
+      - "0"
+      - --ctx-size
+      - "8192"
+      - --parallel
+      - "2"
+      - --threads
+      - "4"
+    volumes:
+      - models:/models:ro
+    depends_on:
+      models:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 60
+      start_period: 20s
+    logging:
+      driver: none
+
+  app:
+    <<: *application
+    environment:
+      <<: *runtime-environment
+      TELEGRAM_API_KEY: ${TELEGRAM_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SHUTDOWN_TIMEOUT: ${SHUTDOWN_TIMEOUT:-30}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stop_grace_period: 40s
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-m", "receipt_bot.bootstrap.readiness"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+
+  test:
+    <<: *application
+    profiles: ["test"]
+    command: ["python", "-m", "pytest", "-q"]
+    environment:
+      <<: *runtime-environment
+      TEST_POSTGRES_DSN: postgresql://receipt:receipt@postgres:5432/receipt
+      TEST_QWEN_URL: http://llm:8080/v1
+      TEST_MODEL_DIR: /models
+      TEST_OCR_MODEL_DIR: /models
+    depends_on:
+      postgres:
+        condition: service_healthy
+      llm:
+        condition: service_healthy
+      models:
+        condition: service_completed_successfully
+
+volumes:
+  postgres-data:
+  models:

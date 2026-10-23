@@ -1,0 +1,47 @@
+[
+  {
+    "path": "Qwen3-1.7B-Q4_K_M.gguf",
+    "url": "https://huggingface.co/ggml-org/Qwen3-1.7B-GGUF/resolve/daeb8e2d528a760970442092f6bf1e55c3b659eb/Qwen3-1.7B-Q4_K_M.gguf",
+    "sha256": "d2387ca2dbfee2ffabce7120d3770dadca0b293052bc2f0e138fdc940d9bc7b5"
+  },
+  {
+    "path": "cyrillic_PP-OCRv3_mobile_rec/inference.json",
+    "url": "https://huggingface.co/PaddlePaddle/cyrillic_PP-OCRv3_mobile_rec/resolve/e5b3249015e50836e3a7a54301a314b9d7fc7059/inference.json",
+    "sha256": "dc28fdd0fcf95709d8e9b2bed2e9eb43d2dfd9ad010f268079470c6aad7a0e9a"
+  },
+  {
+    "path": "cyrillic_PP-OCRv3_mobile_rec/inference.yml",
+    "url": "https://huggingface.co/PaddlePaddle/cyrillic_PP-OCRv3_mobile_rec/resolve/e5b3249015e50836e3a7a54301a314b9d7fc7059/inference.yml",
+    "sha256": "ab334f31f74bac79bf7d1eeaf59756b38e175c1f731af46ed5e372d845452015"
+  },
+  {
+    "path": "cyrillic_PP-OCRv3_mobile_rec/inference.pdiparams",
+    "url": "https://huggingface.co/PaddlePaddle/cyrillic_PP-OCRv3_mobile_rec/resolve/e5b3249015e50836e3a7a54301a314b9d7fc7059/inference.pdiparams",
+    "sha256": "2ef815afbb8970610618561946ce86faf60745ada64cd316ed34bfe34bdbf46f"
+  },
+  {
+    "path": "cyrillic_PP-OCRv3_mobile_rec/config.json",
+    "url": "https://huggingface.co/PaddlePaddle/cyrillic_PP-OCRv3_mobile_rec/resolve/e5b3249015e50836e3a7a54301a314b9d7fc7059/config.json",
+    "sha256": "a85f7e9a30b226ac7e73be3ce251ba2cccc5e2c29d310b765046b6d0e26dc3e0"
+  },
+  {
+    "path": "PP-OCRv3_mobile_det/inference.json",
+    "url": "https://huggingface.co/PaddlePaddle/PP-OCRv3_mobile_det/resolve/58f4e5b132e34e516486fb0d0266c662feb48ca1/inference.json",
+    "sha256": "26c59bd5c5bea8b63efecb9115c35b7eea300081bd8703dc464da4aa19825b98"
+  },
+  {
+    "path": "PP-OCRv3_mobile_det/inference.yml",
+    "url": "https://huggingface.co/PaddlePaddle/PP-OCRv3_mobile_det/resolve/58f4e5b132e34e516486fb0d0266c662feb48ca1/inference.yml",
+    "sha256": "ccfc8b069bb0d5505ecefa6defc54140c10bf0194fde5395aba0a1a99e5ea90f"
+  },
+  {
+    "path": "PP-OCRv3_mobile_det/inference.pdiparams",
+    "url": "https://huggingface.co/PaddlePaddle/PP-OCRv3_mobile_det/resolve/58f4e5b132e34e516486fb0d0266c662feb48ca1/inference.pdiparams",
+    "sha256": "7e9518c6ab706fe87842a8de1c098f990e67f9212b67c9ef8bc4bca6dc17b91a"
+  },
+  {
+    "path": "PP-OCRv3_mobile_det/config.json",
+    "url": "https://huggingface.co/PaddlePaddle/PP-OCRv3_mobile_det/resolve/58f4e5b132e34e516486fb0d0266c662feb48ca1/config.json",
+    "sha256": "c9d07ea65624c3df541a634a302fe76d53baecf98b5ee9678910b955638d7d80"
+  }
+]
