@@ -1,7 +1,5 @@
 # Запуск бота
 
-Команды выполнять из каталога `impl/`. Нужны Docker с Compose и Make.
-
 Скопировать `.env.example` в `.env`, если своего `.env` ещё нет. Заполнить `TELEGRAM_API_KEY`
 токеном BotFather и `OPENAI_API_KEY` ключом провайдера. Не добавлять `.env` в Git.
 
