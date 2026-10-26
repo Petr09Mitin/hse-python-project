@@ -9,3 +9,4 @@ __pycache__/
 /models/
 dist/
 *.egg-info/
+.idea
