@@ -8,7 +8,7 @@ import pytest
 
 from receipt_bot.application.messaging.incoming_message import IncomingMessage
 from receipt_bot.application.reports.report_period_resolver import ReportPeriodResolver
-from receipt_bot.domain.categories.category import DEFAULT_CATEGORIES
+from receipt_bot.domain.categories.category import DEFAULT_CATEGORIES, Category
 from receipt_bot.domain.categories.review_task import ReviewTask
 from receipt_bot.domain.money import Money
 from receipt_bot.domain.receipts.receipt import Receipt
@@ -49,6 +49,43 @@ def test_save_returns_existing_receipt_preserving_manual_category(repositories):
     assert stored.review_tasks[0].status == "answered"
     assert expenses.find_by_source(11, receipt.source_key) is None
     assert expenses.get_review_task(11, task.id) is None
+
+
+@pytest.mark.parametrize("payload", ["O'Reilly", "'); DROP TABLE receipts CASCADE; --", r"\' %s %(name)s $$ --"])
+def test_sql_payloads_round_trip_as_receipt_data(repositories, payload):
+    expenses, _ = repositories
+    receipt, task = sample(int(uuid4().int % 10**12) + 100)
+    item = replace(receipt.items[0], id=str(uuid4()) + payload, item_name=payload)
+    receipt = replace(receipt, id=str(uuid4()) + payload, source_key=payload, items=(item,))
+    category = Category(payload, payload)
+    task = replace(task, id=str(uuid4()) + payload, item_id=item.id, options=(category,))
+
+    stored = expenses.save(receipt, (task,))
+
+    assert stored.receipt == receipt
+    assert stored.review_tasks == (task,)
+    assert expenses.find_by_source(receipt.owner_id, payload) == stored
+    assert expenses.get_review_task(receipt.owner_id, task.id) == task
+    period = ReportPeriod(receipt.purchase_date, receipt.purchase_date)
+    assert expenses.list_receipts(receipt.owner_id, period) == (receipt,)
+    assert expenses.answer_review(receipt.owner_id, task.id, category, datetime.now(UTC))
+    assert expenses.find_by_source(receipt.owner_id, payload).receipt.items[0].category == category
+    assert expenses.get_review_task(receipt.owner_id, task.id).answer_category == category
+
+
+def test_sql_payloads_cannot_broaden_receipt_or_review_filters(repositories):
+    expenses, _ = repositories
+    receipt, task = sample(int(uuid4().int % 10**12) + 100)
+    stored = expenses.save(receipt, (task,))
+    payload = "' OR TRUE --"
+
+    assert expenses.find_by_source(receipt.owner_id, payload) is None
+    assert expenses.get_review_task(receipt.owner_id, payload) is None
+    assert not expenses.answer_review(receipt.owner_id, payload, DEFAULT_CATEGORIES[0], datetime.now(UTC))
+    assert expenses.find_by_source(receipt.owner_id, receipt.source_key) == stored
+    assert expenses.find_by_source(receipt.owner_id + 1, payload) is None
+    assert not expenses.answer_review(receipt.owner_id + 1, payload, DEFAULT_CATEGORIES[0], datetime.now(UTC))
+    assert expenses.get_review_task(receipt.owner_id, task.id) == task
 
 
 def test_save_race_and_review_race_have_one_winner(repositories):
@@ -135,6 +172,23 @@ def test_conversation_event_survives_completion_and_cancel(repositories):
     resolver.resolve(IncomingMessage(owner, 77, "cancel", "/cancel"))
     assert resolver.resolve(first) == original
     assert resolver.resolve(IncomingMessage(owner + 1, 77, "first", "01.10.2026")).kind == "ignored"
+
+
+@pytest.mark.parametrize("payload", ["' OR TRUE --", "'); DROP TABLE report_events CASCADE; --"])
+def test_sql_payloads_remain_literal_conversation_events(repositories, payload):
+    from receipt_bot.application.reports.report_period_resolution import ReportPeriodResolution
+
+    _, conversations = repositories
+    owner = int(uuid4().int % 10**12) + 100
+    original = ReportPeriodResolution("cancelled", "Первое событие")
+    result = ReportPeriodResolution("cancelled", payload)
+    other = ReportPeriodResolution("cancelled", "Другой пользователь или чат")
+    assert conversations.transition(owner, 77, "existing", lambda _: (None, original)) == original
+    assert conversations.transition(owner, 77, payload, lambda _: (None, result)) == result
+    assert conversations.transition(owner, 77, payload, lambda _: pytest.fail("Повтор события")) == result
+    assert conversations.transition(owner, 77, "existing", lambda _: pytest.fail("Повтор события")) == original
+    assert conversations.transition(owner + 1, 77, payload, lambda _: (None, other)) == other
+    assert conversations.transition(owner, 78, payload, lambda _: (None, other)) == other
 
 
 def test_conversation_race_calls_pure_change_once_and_rollback(repositories):

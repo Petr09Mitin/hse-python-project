@@ -1,12 +1,11 @@
 COMPOSE = docker compose
-TEST_COMPOSE = docker compose -p receipt-bot-tests --profile local --profile test
+TEST_COMPOSE = TELEGRAM_API_KEY= OPENAI_BASE_URL= OPENAI_MODEL= OPENAI_API_KEY= $(COMPOSE) -p receipt-bot-tests
 UV = uv
-OCR_EXTRA = $(if $(filter Linux,$(shell uname -s)),--extra ocr,)
 
 .PHONY: install run up down logs test lint format check
 
 install:
-	$(UV) sync --frozen --extra dev $(OCR_EXTRA)
+	$(UV) sync --frozen --extra dev
 
 run:
 	$(COMPOSE) up --build app
@@ -22,9 +21,8 @@ logs:
 
 test:
 	@set -e; \
-	trap '$(TEST_COMPOSE) stop >/dev/null' EXIT; \
-	$(TEST_COMPOSE) up --build --wait --wait-timeout 900 postgres llm; \
-	$(TEST_COMPOSE) run --build --rm --no-deps test
+	trap '$(TEST_COMPOSE) down >/dev/null' EXIT; \
+	$(TEST_COMPOSE) run --build --rm -e TEST_POSTGRES_DSN=postgresql://receipt:receipt@postgres:5432/receipt app python -m pytest -q
 
 lint:
 	.venv/bin/ruff check .
