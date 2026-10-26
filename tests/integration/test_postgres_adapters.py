@@ -55,7 +55,7 @@ def test_save_returns_existing_receipt_preserving_manual_category(repositories):
 def test_sql_payloads_round_trip_as_receipt_data(repositories, payload):
     expenses, _ = repositories
     receipt, task = sample(int(uuid4().int % 10**12) + 100)
-    item = replace(receipt.items[0], id=str(uuid4()) + payload, item_name=payload)
+    item = replace(receipt.items[0], id=str(uuid4()) + payload, item_name=payload, category=Category("stored", payload))
     receipt = replace(receipt, id=str(uuid4()) + payload, source_key=payload, items=(item,))
     category = Category(payload, payload)
     task = replace(task, id=str(uuid4()) + payload, item_id=item.id, options=(category,))
